@@ -2,6 +2,7 @@ package com.example.crossyroad_jimmy
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.example.crossyroad_jimmy.databinding.ActivityGameBinding
@@ -107,11 +108,25 @@ class GameActivity : AppCompatActivity(), GameContract.View {
     }
 
     override fun showScore(score: Int) {
-        TODO("Not yet implemented")
+        val scoreState = "Score : $score"
+        MainScope().launch {
+            binder.tvScore.text = scoreState
+        }
     }
 
-    override fun showLife(Lift: Int) {
-        TODO("Not yet implemented")
+    override fun showLife(life: Int) {
+        val lifeState = "Life : $life"
+        MainScope().launch {
+            binder.tvLife.text = lifeState
+        }
+    }
+
+    override fun showGameEnd(score: Int) {
+        val gameEndText = "Game Over!\nScore : $score"
+        MainScope().launch {
+            binder.tvGameEnd.visibility = View.VISIBLE
+            binder.tvGameEnd.text = gameEndText
+        }
     }
 
 
@@ -151,8 +166,8 @@ class GameActivity : AppCompatActivity(), GameContract.View {
         newSnakeView.setImageResource(R.drawable.snake)
         newSnakeView.layoutParams = FrameLayout.LayoutParams(size.width, size.height)
         newSnakeView.scaleType = ImageView.ScaleType.FIT_XY
-        newSnakeView.x = snake.positionX
-        newSnakeView.y = snake.positionY
+        newSnakeView.x = snake.x
+        newSnakeView.y = snake.y
 
         //속성 적용이 끝났으면 화면에 추가
         binder.root.addView(newSnakeView)

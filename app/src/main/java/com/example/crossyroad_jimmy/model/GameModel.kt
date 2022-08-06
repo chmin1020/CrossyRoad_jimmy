@@ -3,6 +3,7 @@ package com.example.crossyroad_jimmy.model
 import com.example.crossyroad_jimmy.model.floatingObject.Crocodile
 import com.example.crossyroad_jimmy.model.floatingObject.FloatingObject
 import com.example.crossyroad_jimmy.model.floatingObject.Log
+import kotlin.math.log
 
 class GameModel(displayWidth: Int, displayHeight: Int) {
     //------------------------------------------------
@@ -26,15 +27,32 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
 
     private val yPosOfGrass = displayHeight * 0.3F
 
+    private val crocodileSnoutWidth = (displayWidth * 0.12F).toInt()
+    private val crocodileBackWidth = (displayWidth * 0.24F).toInt()
+
     val snakeSize = ObjectSize((displayHeight * 0.08F).toInt(), (displayHeight * 0.08F).toInt())
-    val floatingObjectSize = ObjectSize((displayWidth * 0.4F).toInt(), (displayHeight * 0.06F).toInt())
+    val floatingObjectSize = ObjectSize((displayWidth * 0.36F).toInt(), (displayHeight * 0.06F).toInt())
     private val frogSize = ObjectSize((displayWidth * 0.1F).toInt(), (displayWidth * 0.1F).toInt())
+    private val crocodileBackSize = ObjectSize(crocodileBackWidth,floatingObjectSize.height)
     private val displaySize = ObjectSize(displayWidth, displayHeight)
+    private val areaSize = ObjectSize(displayWidth, (displayHeight * 0.1F).toInt())
+
 
     //게임 화면의 position (화면 벗어남 판별 시 사용)
     private val displayX = 0F
     private val displayY = 0F
 
+
+    //리버4, 그래스1, 데스티네이션1 겹치기 확인
+    private val areaX = 0F
+    private val destinationY = 0F
+    private val grassY = displayHeight * 0.3F
+    private val riversY = mutableListOf(
+        displayHeight * 0.1F,
+        displayHeight * 0.2F,
+        displayHeight * 0.4F,
+        displayHeight * 0.5F
+    )
 
     //------------------------------------------------
     //변수 영역
@@ -55,7 +73,6 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         River(-floatingObjectSize.width.toFloat() + 1F, yPosOfRiver3, 1, RandomNumber.get(flowPeriodLowerPoint, flowPeriodUpperPoint)),
         River(displayWidth.toFloat() -1F, yPosOfRiver4, -1, RandomNumber.get(flowPeriodLowerPoint, flowPeriodUpperPoint))
     )
-
 
 
     // 생성자
@@ -81,7 +98,7 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
     //
 
     fun getFrogPosition(): Pair<Float, Float>{
-        return Pair(frog.currentX, frog.currentY)
+        return Pair(frog.x, frog.y)
     }
 
     fun getSnakes(): List<Snake>{
@@ -96,21 +113,88 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         return logs.toList()
     }
 
+    fun getLife(): Int{
+        return frog.life
+    }
+
+    fun getScore(): Int{
+        return frog.score
+    }
+
 
     //------------------------------------------------
     //함수 영역 (사용자 입력에 의한 갱신)
     //
 
-    fun frogJump(): Pair<Float, Float>{
+    fun frogJump(){
         frog.frontJump()
 
-
-        // - 죽었는가?
         // - 목적지에 도착했는가?
+        if(areTheyOverlapped(frog.x, frog.y, frogSize, areaX, destinationY, areaSize)) {
+            frog.positionReset()
+            frog.scoreIncrease()
+        }
+
+        // - 뱀에게 죽었는가?
+        if(areTheyOverlapped(frog.x, frog.y, frogSize, areaX, grassY, areaSize)){
+            val snakeIterator = snakes.iterator()
+            var eachSnake: Snake
+
+            while(snakeIterator.hasNext()){
+                eachSnake = snakeIterator.next()
+
+                if(areTheyOverlapped(frog.x, frog.y, frogSize, eachSnake.x, eachSnake.y, snakeSize)){
+                    frog.frogDead()
+                    frog.positionReset()
+                }
+            }
+        }
+
+        val riverYIterator = riversY.iterator()
+        var eachRiverY: Float
+        //강에서 죽었는가
+        frog.floatingReset()
+        while(riverYIterator.hasNext()){
+            eachRiverY = riverYIterator.next()
+            if(areTheyOverlapped(frog.x, frog.y, frogSize, areaX, eachRiverY, areaSize)){
+                val crocodileIterator = crocodiles.iterator()
+                val logIterator = logs.iterator()
+                var eachCrocodile: Crocodile
+                var eachLog: Log
+                var isDead = true
+
+                var crocodileBackX: Float
+                while(crocodileIterator.hasNext()){
+                    eachCrocodile = crocodileIterator.next()
+
+                    crocodileBackX = eachCrocodile.x
+                    if(eachCrocodile.velocity < 0)
+                        crocodileBackX += crocodileSnoutWidth
+
+                    if(areTheyOverlapped(frog.x, frog.y, frogSize, crocodileBackX, eachCrocodile.y, crocodileBackSize)){
+                        frog.floatingSetting(eachCrocodile.velocity)
+                        isDead = false
+                    }
+                }
+
+                while(logIterator.hasNext()){
+                    eachLog = logIterator.next()
+                    if(areTheyOverlapped(frog.x, frog.y, frogSize, eachLog.x, eachLog.y, floatingObjectSize)){
+                        frog.floatingSetting(eachLog.velocity)
+                        isDead = false
+                    }
+                }
+
+                if(isDead){
+                    frog.positionReset()
+                    frog.frogDead()
+                }
+
+                break
+            }
+        }
+
         // - floating에 올라탔는가?
-
-
-        return getFrogPosition()
     }
 
 
@@ -145,15 +229,29 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         crocodiles.addAll(newCrocodiles)
         logs.addAll(newLogs)
 
-
         return FloatingObjectData(newCrocodiles, newLogs)
     }
 
 
     fun moveFloatingObjects(){
+        frogFloatingUpdate()
         eachMoveUpdate(crocodiles)
         eachMoveUpdate(logs)
     }
+
+
+    private fun frogFloatingUpdate(){
+        if(!frog.isFloating)
+            return
+        frog.frogFloating()
+
+        if(!areTheyOverlapped(frog.x, frog.y, frogSize, displayX, displayY, displaySize)){
+            frog.floatingReset()
+            frog.positionReset()
+            frog.frogDead()
+        }
+    }
+
 
     fun removeFloatingObjects(): FloatingObjectData {
         val removingCrocodiles = mutableListOf<Crocodile>()
@@ -207,6 +305,4 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         while (it.hasNext())
             it.next().positionUpdate()
     }
-
-
 }

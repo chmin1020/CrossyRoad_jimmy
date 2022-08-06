@@ -30,16 +30,22 @@ class GamePresenter: GameContract.Presenter{
     }
 
     override fun frogJump() {
-        val frogPos = model.frogJump()
+        model.frogJump()
+        val frogPos = model.getFrogPosition()
 
         view.showFrogPosition(frogPos.first, frogPos.second)
+        updateDataAboutLife()
     }
 
     override fun periodicUpdateTimerStart() {
         updateTimer = timer(period = model.updatePeriod){
+            val frogPos = model.getFrogPosition()
+
+            view.showFrogPosition(frogPos.first, frogPos.second)
             updateDataAboutNewFloatingObjects()
             updateDataAboutObjectsMoving()
             updateDataAboutObjectsRemoving()
+            updateDataAboutLife()
         }
     }
 
@@ -71,6 +77,17 @@ class GamePresenter: GameContract.Presenter{
 
         view.hideRemovedCrocodiles(removedFloatingObjects.crocodiles)
         view.hideRemovedLogs(removedFloatingObjects.logs)
+    }
+
+    private fun updateDataAboutLife(){
+        val life = model.getLife()
+        val score = model.getScore()
+
+        view.showLife(life)
+        view.showScore(score)
+
+        if(life <= 0)
+            view.showGameEnd(score)
     }
 
 }

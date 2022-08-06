@@ -35,6 +35,7 @@ interface GameContract {
 
         //개구리의 움직임에 따른 변경
         fun showScore(score: Int)
-        fun showLife(Lift: Int)
+        fun showLife(life: Int)
+        fun showGameEnd(score: Int)
     }
 }
