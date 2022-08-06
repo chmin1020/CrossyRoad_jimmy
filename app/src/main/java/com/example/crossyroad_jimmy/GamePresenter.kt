@@ -1,13 +1,12 @@
 package com.example.crossyroad_jimmy
 
-import android.util.Log
 import com.example.crossyroad_jimmy.model.GameModel
 import java.util.*
 import kotlin.concurrent.timer
 
 class GamePresenter: GameContract.Presenter{
     //------------------------------------------------
-    //상수 영역
+    //??? 영역
     //
 
     //view, model 과 각각 연결되어 있음
@@ -17,34 +16,32 @@ class GamePresenter: GameContract.Presenter{
     //모델과 뷰를 주기적으로 갱신하기 위한 타이머
     private lateinit var updateTimer: Timer
 
+
+    //------------------------------------------------
+    //??? 영역
+    //
+
     override fun initSet(view: GameContract.View, displayWidth: Int, displayHeight: Int) {
         this.view = view
         this.model = GameModel(displayWidth, displayHeight)
 
-        val frogPos = model.getFrogPosition()
-        view.showFrogPosition(frogPos.first, frogPos.second)
-
-        val snakes = model.getSnakes()
-        view.showSnakes(snakes, model.snakeSize)
-
+        updateDataAboutFrogPosition()
+        updateDataAboutSnakes()
     }
 
     override fun frogJump() {
-        model.frogJump()
-        val frogPos = model.getFrogPosition()
+        model.frogJump() //개구리의 점프 실행 (위치 데이터 갱신)
 
-        view.showFrogPosition(frogPos.first, frogPos.second)
-        updateDataAboutLife()
+        updateDataAboutFrogPosition() //갱신된 위치 데이터 적용
+        updateDataAboutLife() //갱신된 목숨과 점수 적용
     }
 
     override fun periodicUpdateTimerStart() {
         updateTimer = timer(period = model.updatePeriod){
-            val frogPos = model.getFrogPosition()
-
-            view.showFrogPosition(frogPos.first, frogPos.second)
+            updateDataAboutFrogPosition()
             updateDataAboutNewFloatingObjects()
-            updateDataAboutObjectsMoving()
-            updateDataAboutObjectsRemoving()
+            updateDataAboutFloatingObjectsMoving()
+            updateDataAboutFloatingObjectsRemoving()
             updateDataAboutLife()
         }
     }
@@ -55,8 +52,18 @@ class GamePresenter: GameContract.Presenter{
 
 
     //------------------------------------------------
-    //함수 영역 (주기적 갱신 시 실행되는 함수들)
+    // 내부 함수 영역
     //
+
+    private fun updateDataAboutFrogPosition(){
+        val frogPos = model.getFrogPosition()
+        view.showFrogPosition(frogPos.first, frogPos.second)
+    }
+
+    private fun updateDataAboutSnakes(){
+        val snakes = model.getSnakes()
+        view.showSnakes(snakes, model.snakeSize)
+    }
 
     private fun updateDataAboutNewFloatingObjects(){
         val newFloatingObjects = model.addFloatingObjects()
@@ -65,14 +72,14 @@ class GamePresenter: GameContract.Presenter{
         view.showNewLogs(newFloatingObjects.logs, model.floatingObjectSize)
     }
 
-    private fun updateDataAboutObjectsMoving(){
+    private fun updateDataAboutFloatingObjectsMoving(){
         model.moveFloatingObjects()
 
         view.showCrocodileMoving(model.getCrocodiles())
         view.showLogMoving(model.getLogs())
     }
 
-    private fun updateDataAboutObjectsRemoving(){
+    private fun updateDataAboutFloatingObjectsRemoving(){
         val removedFloatingObjects = model.removeFloatingObjects()
 
         view.hideRemovedCrocodiles(removedFloatingObjects.crocodiles)
@@ -89,5 +96,4 @@ class GamePresenter: GameContract.Presenter{
         if(life <= 0)
             view.showGameEnd(score)
     }
-
 }
