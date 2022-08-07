@@ -61,13 +61,13 @@ class GamePresenter: GameContract.Presenter{
     /* 뱀의 개수와 위치를 뷰에 적용하는 함수 */
     private fun updateDataAboutSnakes(){
         val snakes = model.getSnakes()
-        view.showSnakes(snakes, model.snakeSize)
+        view.showSnakes(snakes)
     }
 
     /* 개구리의 위치를 갱신하는 함수 */
     private fun updateDataAboutFrogPosition(){
         val frogPos = model.getFrogPosition()
-        view.showFrogPosition(frogPos.first, frogPos.second)
+        view.showFrogPosition(frogPos.x, frogPos.y)
     }
 
     /* 떠다니는 물체(악어, 통나무)를 새로 화면에 추가하는 함수 */

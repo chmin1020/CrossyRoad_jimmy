@@ -1,6 +1,7 @@
 package com.example.crossyroad_jimmy.model
 
-class River(val startX: Float, val startY: Float, val direction: Int, private val timePeriod: Long) {
+class River(val spawnPosition: Position, val direction: Int, private val timePeriod: Long) {
+
     var currentTime: Long = 0L
 
 

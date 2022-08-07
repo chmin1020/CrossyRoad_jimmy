@@ -20,7 +20,7 @@ interface GameContract {
 
     interface View{
         //초기 설정
-        fun showSnakes(snakes: List<Snake>, size: ObjectSize)
+        fun showSnakes(snakes: List<Snake>)
 
         //사용자 입력
         fun showFrogPosition(x: Float, y: Float)

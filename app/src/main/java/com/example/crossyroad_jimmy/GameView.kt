@@ -8,6 +8,7 @@ import android.widget.ImageView
 import androidx.viewbinding.ViewBinding
 import com.example.crossyroad_jimmy.databinding.ActivityGameBinding
 import com.example.crossyroad_jimmy.model.ObjectSize
+import com.example.crossyroad_jimmy.model.Position
 import com.example.crossyroad_jimmy.model.Snake
 import com.example.crossyroad_jimmy.model.floatingObject.Crocodile
 import com.example.crossyroad_jimmy.model.floatingObject.FloatingObject
@@ -46,11 +47,11 @@ class GameView(private val context: Context, private val presenter: GameContract
         }
     }
 
-    override fun showSnakes(snakes: List<Snake>, size: ObjectSize) {
+    override fun showSnakes(snakes: List<Snake>) {
         val snakeIterator = snakes.iterator()
 
         while(snakeIterator.hasNext()){
-            makeNewSnakeView(snakeIterator.next(), size)
+            makeNewSnakeView(snakeIterator.next())
         }
     }
 
@@ -132,14 +133,16 @@ class GameView(private val context: Context, private val presenter: GameContract
     private fun eachViewMovingUpdate(movingObjects: List<FloatingObject>, viewTable: MutableMap<Long, ImageView>){
         val objectInList = movingObjects.iterator()
         var curObj: FloatingObject
+        var curPos: Position
         var curView: ImageView?
 
         //데이터 개수만큼 업데이트 (객체와 대응하는 뷰 각각 가져와서 속성 갱신)
         while (objectInList.hasNext()) {
             curObj = objectInList.next()
+            curPos = curObj.getPos()
             curView = viewTable[curObj.id]
-            curView?.x = curObj.x
-            curView?.y = curObj.y
+            curView?.x = curPos.x
+            curView?.y = curPos.y
         }
     }
 
@@ -155,8 +158,8 @@ class GameView(private val context: Context, private val presenter: GameContract
         }
     }
 
-    private fun makeNewSnakeView(snake: Snake, size: ObjectSize) {
-        makeNewView(R.drawable.snake, size, snake.x, snake.y)
+    private fun makeNewSnakeView(snake: Snake) {
+        makeNewView(R.drawable.snake, snake.size, snake.getPos())
     }
 
     private fun makeNewCrocodileView(crocodile: Crocodile): ImageView {
@@ -165,20 +168,20 @@ class GameView(private val context: Context, private val presenter: GameContract
                              else
                                 R.drawable.crocodile_to_left
 
-        return makeNewView(whichCrocodile, crocodile.size, crocodile.x, crocodile.y)
+        return makeNewView(whichCrocodile, crocodile.size, crocodile.getPos())
     }
 
     private fun makeNewLogView(log: Log): ImageView {
-        return makeNewView(R.drawable.log, log.size, log.x, log.y)
+        return makeNewView(R.drawable.log, log.size, log.getPos())
     }
 
-    private fun makeNewView(resId: Int, size: ObjectSize, x: Float, y: Float): ImageView{
+    private fun makeNewView(resId: Int, size: ObjectSize, position: Position): ImageView{
         val newView = ImageView(context)
         newView.setImageResource(resId)
         newView.layoutParams = FrameLayout.LayoutParams(size.width, size.height)
         newView.scaleType = ImageView.ScaleType.FIT_XY
-        newView.x = x
-        newView.y = y
+        newView.x = position.x
+        newView.y = position.y
 
         //속성 적용이 끝났으면 화면에 추가
         binder.root.addView(newView)

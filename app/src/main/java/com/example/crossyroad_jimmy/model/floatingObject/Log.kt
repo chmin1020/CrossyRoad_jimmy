@@ -1,27 +1,26 @@
 package com.example.crossyroad_jimmy.model.floatingObject
 
-import android.util.Log
 import com.example.crossyroad_jimmy.model.Frog
 import com.example.crossyroad_jimmy.model.ObjectSize
+import com.example.crossyroad_jimmy.model.Position
 
-class Log (id: Long, x: Float, y: Float, velocity: Float, size: ObjectSize)
-    : FloatingObject(id, x, y, velocity, size) {
-    private var endX = x + size.width
-    private val endY = y + size.height
+class Log (id: Long, position: Position, velocity: Float, size: ObjectSize)
+    : FloatingObject(id, position, velocity, size) {
+    private var endPosition = Position(position.x + size.width, position.y + size.height)
 
     override fun positionUpdate() {
         super.positionUpdate()
-        endX += velocity
+        endPosition.x += velocity
     }
 
     override fun isFrogFloating(frog: Frog): Boolean {
-        Log.d("posss) fx, fex/ x, endx", "${frog.x}, ${frog.endX} / $x, $endX ")
-        Log.d("posss) fy, fey/ y, endy", "${frog.y}, ${frog.endY} / $y, $endY ")
+        val frogPos = frog.getPos()
+        val frogEndPos = Position(frogPos.x + frog.size.width, frogPos.y + frog.size.height)
 
-        if(frog.x < x || frog.endX > endX)
+        if(frogPos.x < getPos().x || frogEndPos.x > endPosition.x)
             return false
 
-        if(!(frog.endY in y..endY))
+        if(!(frogEndPos.y in getPos().y..endPosition.y))
             return false
 
         return true
