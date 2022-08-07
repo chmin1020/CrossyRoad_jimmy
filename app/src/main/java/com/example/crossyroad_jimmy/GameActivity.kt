@@ -2,18 +2,6 @@ package com.example.crossyroad_jimmy
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import android.widget.FrameLayout
-import android.widget.ImageView
-import androidx.core.os.persistableBundleOf
-import com.example.crossyroad_jimmy.databinding.ActivityGameBinding
-import com.example.crossyroad_jimmy.model.ObjectSize
-import com.example.crossyroad_jimmy.model.Snake
-import com.example.crossyroad_jimmy.model.floatingObject.Crocodile
-import com.example.crossyroad_jimmy.model.floatingObject.FloatingObject
-import com.example.crossyroad_jimmy.model.floatingObject.Log
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 
 class GameActivity : AppCompatActivity() {
     //------------------------------------------------

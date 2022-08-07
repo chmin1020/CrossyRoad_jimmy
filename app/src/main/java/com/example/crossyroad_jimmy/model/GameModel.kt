@@ -1,9 +1,6 @@
 package com.example.crossyroad_jimmy.model
 
-import com.example.crossyroad_jimmy.model.floatingObject.Crocodile
-import com.example.crossyroad_jimmy.model.floatingObject.FloatingObject
-import com.example.crossyroad_jimmy.model.floatingObject.FloatingObjectFactory
-import com.example.crossyroad_jimmy.model.floatingObject.Log
+import com.example.crossyroad_jimmy.model.floatingObject.*
 
 class GameModel(displayWidth: Int, displayHeight: Int) {
     //------------------------------------------------
@@ -13,13 +10,14 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
     //게임 내 주기적 업데이트의 빈도
     val updatePeriod = 100L
 
-
     //각 객체들의 크기 (충돌 여부 확인을 위해 사용)
-    private val snakeSize = ObjectSize((displayHeight * 0.08F).toInt(), (displayHeight * 0.08F).toInt())
     private val displaySize = ObjectSize(displayWidth, displayHeight)
     private val areaSize = ObjectSize(displayWidth, (displayHeight * 0.1F).toInt())
 
     //floatingObject 객체의 가로 길이 하한, 상한선 / 세로 길이
+    //각 강의 흐름 속도 범위
+    private val flowPeriodMin = 3000L
+    private val flowPeriodMax = 4000L
     private val floatingObjectMinWidth = (displayWidth * 0.3F).toInt()
     private val floatingObjectMaxWidth = (displayWidth * 0.45F).toInt()
     private val floatingObjectHeight = (displayHeight * 0.06F).toInt()
@@ -57,14 +55,15 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         Position(displayWidth * 0.5F - frogSize.width / 2, displayHeight * 0.65F - frogSize.height / 2)
 
     //뱀 객체 개수 무작위 지정 시 최대값
+    private val snakeSize = ObjectSize((displayHeight * 0.08F).toInt(), (displayHeight * 0.08F).toInt())
     private val snakeCntMin = 1
     private val snakeCntMax = 2
     private val snakeSpawnRangeMin = 0F
     private val snakeSpawnRangeMax = (displayWidth - snakeSize.width).toFloat()
 
-    //각 강의 흐름 속도 범위
-    private val flowPeriodMin = 3000L
-    private val flowPeriodMax = 4000L
+    //FloatingFactory 운영을 위한 상수
+    private val typeCrocodile = 0
+    private val typeLog = 1
 
 
     //------------------------------------------------
@@ -90,9 +89,10 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
     private val snakes = mutableListOf<Snake>() //생성자에서 한 번 설정되고 변화하지 않음
 
     //개수가 바뀌는(동적인) 인스턴스 리스트
-    private val crocodiles = mutableListOf<Crocodile>()
-    private val logs = mutableListOf<Log>()
+    private val crocodiles = mutableListOf<FloatingObject>()
+    private val logs = mutableListOf<FloatingObject>()
 
+    private val floatingFactories = arrayOf(CrocodileFactory, LogFactory)
 
     //------------------------------------------------
     //생성자 영역
@@ -143,10 +143,10 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
     }
 
     /* 화면에 남아있는 객체들의 리스트들을 전달하는 함수 */
-    fun getCrocodiles(): List<Crocodile> {
+    fun getCrocodiles(): List<FloatingObject> {
         return crocodiles.toList()
     }
-    fun getLogs(): List<Log>{
+    fun getLogs(): List<FloatingObject>{
         return logs.toList()
     }
 
@@ -160,7 +160,7 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
 
 
     //------------------------------------------------
-    //함수 영역 (사용자 입력에 의한 갱신) - 개구리의 점프
+    //함수 영역 (사용자 입력에 의한 갱신 - 개구리의 점프)
     //
 
 
@@ -171,7 +171,6 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         frogLocationProcess() //현 위치에 따른 다른 후속 과정 수행
     }
 
-    //frogJump()의 내부 함수들
 
     /* 개구리가 점프한 위치를 체크하고 그에 맞는 후속 처리를 하는 함수 */
     private fun frogLocationProcess(){
@@ -182,6 +181,9 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         else if(isFrogOnRiver()) //강
             processForFrogOnRiver()
     }
+
+
+    //개구리의 현재 영역 체크
 
     /* 개구리의 목적지 도착 여부를 true or false 값으로 알리는 함수 */
     private fun isFrogOnDestination(): Boolean{
@@ -211,6 +213,9 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         return false
     }
 
+
+    //현재 영역에 따른 후속 처리 과정
+
     /* 목적지에 도착한 개구리를 위한 후속 처리를 하는 함수 */
     private fun processForFrogOnDestination(){
         frog.positionReset()
@@ -233,18 +238,15 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
 
     /* 강에 도착한 개구리를 위한 후속 처리를 하는 함수 */
     private fun processForFrogOnRiver(){
-        //개구리가 악어 위에 올라탔는지 확인
-        if(frogBoardingCheck(crocodiles.iterator()))
+        //개구리가 악어 또는 통나무 위에 올라탔는지 확인
+        if(frogBoardingCheck(crocodiles.iterator()) || frogBoardingCheck(logs.iterator()))
             return
 
-        //개구리가 통나무 위에 올라탔는지 확인
-        if(frogBoardingCheck(logs.iterator()))
-            return
-
-        //떠다니는 물체(floatingObject)에 올라타지 못했다면 죽음으로 처리
+        //못 올라탔다면 죽음으로 처리
         frog.frogDead()
     }
 
+    /* 강에 도착한 개구리가 다른 물체에 탑승했는지 확인하는 함수 */
     private fun frogBoardingCheck(iterator: Iterator<FloatingObject>): Boolean{
         var eachFloatingObject: FloatingObject
 
@@ -261,88 +263,61 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
 
 
     //------------------------------------------------
-    //함수 영역 (주기적 갱신)
+    //함수 영역 (주기적 갱신 - floatingObject 추가)
     //
 
+    /* 떠 있는 객체를 새롭게 추가하는 함수 */
     fun addFloatingObjects(): FloatingObjectData{
-        val newCrocodiles = mutableListOf<Crocodile>()
-        val newLogs = mutableListOf<Log>()
+        val addedFloatings = addFloatingObjectsOnRiverView()
 
-        addFloatingObjectsOnRiverView(newCrocodiles, newLogs)
+        crocodiles.addAll(addedFloatings.crocodiles)
+        logs.addAll(addedFloatings.logs)
 
-        crocodiles.addAll(newCrocodiles)
-        logs.addAll(newLogs)
-
-        return FloatingObjectData(newCrocodiles, newLogs)
+        return addedFloatings
     }
 
-    private fun addFloatingObjectsOnRiverView(newCrocodiles: MutableList<Crocodile>, newLogs: MutableList<Log>){
+    private fun addFloatingObjectsOnRiverView(): FloatingObjectData{
+        val newFloatings = arrayOf(mutableListOf<FloatingObject>(), mutableListOf())
+
         val riverIterator = rivers.iterator()
         var eachRiver: River
 
         while(riverIterator.hasNext()){
             eachRiver = riverIterator.next()
-
             eachRiver.riverTimeIncrease(updatePeriod)
-            if(eachRiver.isItTimeForNewFloatingObject()){
-                val objectType = RandomNumber.get(FloatingObjectFactory.CROCODILE, FloatingObjectFactory.LOG)
-                val floatingVelocity = floatingSpeed * eachRiver.direction
-                val newFloatingObject
-                        = FloatingObjectFactory.
-                create(objectType, loadObjectId(), eachRiver.spawnPosition, floatingVelocity, loadFloatingObjectSize())
 
-                //고쳐야 함!
-                if(objectType == FloatingObjectFactory.CROCODILE)
-                    newCrocodiles.add(newFloatingObject as Crocodile)
-                else
-                    newLogs.add(newFloatingObject as Log)
+            if(eachRiver.isItTimeForNewFloatingObject()){
+                val objectType = RandomNumber.get(typeCrocodile, typeLog)
+                val floatingVelocity = floatingSpeed * eachRiver.direction
+
+                val newFloatingObject =
+                    floatingFactories[objectType].
+                    create(loadObjectId(), eachRiver.spawnPosition, floatingVelocity, loadFloatingObjectSize())
+                newFloatings[objectType].add(newFloatingObject)
             }
         }
+        return FloatingObjectData(newFloatings[typeCrocodile], newFloatings[typeLog])
     }
 
+    //------------------------------------------------
+    //함수 영역 (주기적 갱신 - floatingObject, floating frog 이동)
+    //
 
+    /* 떠 있는 객체들의 위치 이동을 하는 함수 */
     fun moveFloatingObjects(){
-        frogFloatingUpdate()
+        frogFloatingUpdate() //강에 떠 있는 경우 개구리의 이동
+
+        //악어와 통나무의 이동
         eachFloatingObjectMoveUpdate(crocodiles)
         eachFloatingObjectMoveUpdate(logs)
     }
 
-    fun removeFloatingObjects(): FloatingObjectData {
-        val removingCrocodiles = removeCrocodiles()
-        val removingLogs = removeLogs()
-
-        crocodiles.removeAll(removingCrocodiles)
-        logs.removeAll(removingLogs)
-
-        return FloatingObjectData(removingCrocodiles, removingLogs)
+    /* floatingObject 리스트의 모든 객체들 위치를 갱신하는 함수 */
+    private fun eachFloatingObjectMoveUpdate(objects: List<FloatingObject>) {
+        val it = objects.iterator()
+        while (it.hasNext())
+            it.next().positionUpdate()
     }
-
-    private fun removeCrocodiles(): List<Crocodile>{
-        val iterator = crocodiles.iterator()
-        val removeCheckList = mutableListOf<Crocodile>()
-        var eachCrocodile: Crocodile
-
-        while(iterator.hasNext()){
-            eachCrocodile = iterator.next()
-            if (!areTheyOverlapped(eachCrocodile.getPos(), eachCrocodile.size, displayPosition, displaySize))
-                removeCheckList.add(eachCrocodile)
-        }
-        return removeCheckList
-    }
-
-    private fun removeLogs(): List<Log>{
-        val iterator = logs.iterator()
-        val removeCheckList = mutableListOf<Log>()
-        var eachLog: Log
-
-        while(iterator.hasNext()){
-            eachLog = iterator.next()
-            if (!areTheyOverlapped(eachLog.getPos(), eachLog.size, displayPosition, displaySize))
-                removeCheckList.add(eachLog)
-        }
-        return removeCheckList
-    }
-
 
     /* 개구리가 floating 상태일 때 위치를 갱신하는 함수 */
     private fun frogFloatingUpdate(){
@@ -355,6 +330,36 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
         //떠다니다가 화면 밖으로 나가면 개구리 죽음 처리
         if(!areTheyOverlapped(frog.getPos(), frogSize, displayPosition, displaySize))
             frog.frogDead()
+    }
+
+
+    //------------------------------------------------
+    //함수 영역 (주기적 갱신 - floatingObject 제거)
+    //
+
+    /* 떠 있는 객체들을 제거하는 함수 (제거한 객체 리스트 반환) */
+    fun removeFloatingObjects(): FloatingObjectData {
+        val removingCrocodiles = removeFloatingObject(crocodiles.iterator())
+        val removingLogs = removeFloatingObject(logs.iterator())
+
+        crocodiles.removeAll(removingCrocodiles)
+        logs.removeAll(removingLogs)
+
+        return FloatingObjectData(removingCrocodiles, removingLogs)
+
+    }
+
+    /* FloatingObject 객체들을 제거하는 내부 함수 */
+    private fun removeFloatingObject(iterator: Iterator<FloatingObject>): List<FloatingObject>{
+        val removeCheckList = mutableListOf<FloatingObject>()
+        var eachFloatingObject: FloatingObject
+
+        while(iterator.hasNext()){
+            eachFloatingObject = iterator.next()
+            if (!areTheyOverlapped(eachFloatingObject.getPos(), eachFloatingObject.size, displayPosition, displaySize))
+                removeCheckList.add(eachFloatingObject)
+        }
+        return removeCheckList
     }
 
     /* 두 개체가 서로 겹치는지 확인하는 함수 */
@@ -373,12 +378,5 @@ class GameModel(displayWidth: Int, displayHeight: Int) {
             return false
 
         return true
-    }
-
-    /* floatingObject 리스트의 모든 객체들 위치를 갱신하는 함수 */
-    private fun eachFloatingObjectMoveUpdate(objects: List<FloatingObject>) {
-        val it = objects.iterator()
-        while (it.hasNext())
-            it.next().positionUpdate()
     }
 }
