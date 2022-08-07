@@ -23,8 +23,8 @@ class GameView(private val context: Context, private val presenter: GameContract
     private val crocodileTable = mutableMapOf<Long,ImageView>()
     private val logTable = mutableMapOf<Long,ImageView>()
 
+    //뷰 바인딩 객체
     private lateinit var binder: ActivityGameBinding
-
 
     fun initSet(): ViewBinding {
         binder = ActivityGameBinding.inflate((context as Activity).layoutInflater)
@@ -39,6 +39,13 @@ class GameView(private val context: Context, private val presenter: GameContract
     }
 
 
+    override fun showFrogPosition(x: Float, y: Float) {
+        uiThread.launch {
+            binder.frog.x = x
+            binder.frog.y = y
+        }
+    }
+
     override fun showSnakes(snakes: List<Snake>, size: ObjectSize) {
         val snakeIterator = snakes.iterator()
 
@@ -47,33 +54,26 @@ class GameView(private val context: Context, private val presenter: GameContract
         }
     }
 
-    override fun showFrogPosition(x: Float, y: Float) {
-        uiThread.launch {
-            binder.frog.x = x
-            binder.frog.y = y
-        }
-    }
-
-    override fun showNewCrocodiles(crocodiles: List<Crocodile>, size: ObjectSize) {
+    override fun showNewCrocodiles(crocodiles: List<Crocodile>) {
         uiThread.launch {
             val crocodileIterator = crocodiles.iterator()
             var eachCrocodile: Crocodile
 
             while (crocodileIterator.hasNext()) {
                 eachCrocodile = crocodileIterator.next()
-                crocodileTable[eachCrocodile.id] = makeNewCrocodileView(eachCrocodile, size)
+                crocodileTable[eachCrocodile.id] = makeNewCrocodileView(eachCrocodile)
             }
         }
     }
 
-    override fun showNewLogs(logs: List<Log>, size: ObjectSize) {
+    override fun showNewLogs(logs: List<Log>) {
         uiThread.launch {
             val logIterator = logs.iterator()
             var eachLog: Log
 
             while (logIterator.hasNext()) {
                 eachLog = logIterator.next()
-                logTable[eachLog.id] = makeNewLogView(eachLog, size)
+                logTable[eachLog.id] = makeNewLogView(eachLog)
             }
         }
     }
@@ -135,7 +135,6 @@ class GameView(private val context: Context, private val presenter: GameContract
         var curView: ImageView?
 
         //데이터 개수만큼 업데이트 (객체와 대응하는 뷰 각각 가져와서 속성 갱신)
-
         while (objectInList.hasNext()) {
             curObj = objectInList.next()
             curView = viewTable[curObj.id]
@@ -157,45 +156,32 @@ class GameView(private val context: Context, private val presenter: GameContract
     }
 
     private fun makeNewSnakeView(snake: Snake, size: ObjectSize) {
-        val newSnakeView = ImageView(context)
-        newSnakeView.setImageResource(R.drawable.snake)
-        newSnakeView.layoutParams = FrameLayout.LayoutParams(size.width, size.height)
-        newSnakeView.scaleType = ImageView.ScaleType.FIT_XY
-        newSnakeView.x = snake.x
-        newSnakeView.y = snake.y
-
-        //속성 적용이 끝났으면 화면에 추가
-        binder.root.addView(newSnakeView)
+        makeNewView(R.drawable.snake, size, snake.x, snake.y)
     }
 
-    private fun makeNewCrocodileView(crocodile: Crocodile, size: ObjectSize): ImageView {
-        val newCrocodileView = ImageView(context)
-        if(crocodile.velocity > 0)
-            newCrocodileView.setImageResource(R.drawable.crocodile_to_right)
-        else
-            newCrocodileView.setImageResource(R.drawable.crocodile_to_left)
+    private fun makeNewCrocodileView(crocodile: Crocodile): ImageView {
+        val whichCrocodile = if(crocodile.velocity > 0)
+                                R.drawable.crocodile_to_right
+                             else
+                                R.drawable.crocodile_to_left
 
-        newCrocodileView.layoutParams = FrameLayout.LayoutParams(size.width, size.height)
-        newCrocodileView.scaleType = ImageView.ScaleType.FIT_XY
-        newCrocodileView.x = crocodile.x
-        newCrocodileView.y = crocodile.y
-
-        //속성 적용이 끝났으면 화면에 추가
-        binder.root.addView(newCrocodileView)
-        return newCrocodileView
+        return makeNewView(whichCrocodile, crocodile.size, crocodile.x, crocodile.y)
     }
 
-    private fun makeNewLogView(log: Log, size: ObjectSize): ImageView {
-        val newLogView = ImageView(context)
-        newLogView.setImageResource(R.drawable.log)
+    private fun makeNewLogView(log: Log): ImageView {
+        return makeNewView(R.drawable.log, log.size, log.x, log.y)
+    }
 
-        newLogView.layoutParams = FrameLayout.LayoutParams(size.width, size.height)
-        newLogView.scaleType = ImageView.ScaleType.FIT_XY
-        newLogView.x = log.x
-        newLogView.y = log.y
+    private fun makeNewView(resId: Int, size: ObjectSize, x: Float, y: Float): ImageView{
+        val newView = ImageView(context)
+        newView.setImageResource(resId)
+        newView.layoutParams = FrameLayout.LayoutParams(size.width, size.height)
+        newView.scaleType = ImageView.ScaleType.FIT_XY
+        newView.x = x
+        newView.y = y
 
         //속성 적용이 끝났으면 화면에 추가
-        binder.root.addView(newLogView)
-        return newLogView
+        binder.root.addView(newView)
+        return newView
     }
 }

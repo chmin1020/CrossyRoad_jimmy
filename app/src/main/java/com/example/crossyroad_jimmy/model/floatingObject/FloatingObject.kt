@@ -1,11 +1,17 @@
 package com.example.crossyroad_jimmy.model.floatingObject
 
-abstract class FloatingObject(val id: Long, firstX: Float, firstY: Float, val velocity: Float){
-    var x = firstX
-        private set
-    val y = firstY
+import android.util.Log
+import com.example.crossyroad_jimmy.model.Frog
+import com.example.crossyroad_jimmy.model.ObjectSize
 
-    fun positionUpdate(){
+abstract class FloatingObject
+    (val id: Long, x: Float, val y: Float, val velocity: Float, val size: ObjectSize){
+    var x = x
+        private set
+
+    open fun positionUpdate(){
         x += velocity
     }
+
+    abstract fun isFrogFloating(frog: Frog): Boolean
 }

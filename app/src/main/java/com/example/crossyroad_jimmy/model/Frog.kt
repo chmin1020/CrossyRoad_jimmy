@@ -1,11 +1,14 @@
 package com.example.crossyroad_jimmy.model
 
-class Frog(speed: Float, private val startX: Float, private val startY: Float) {
-    private val frogSpeed = speed
-
+class Frog(distance: Float, private val startX: Float, private val startY: Float, val size: ObjectSize) {
     var x = startX
         private set
     var y = startY
+        private set
+
+    var endX = x + size.width
+        private set
+    var endY = y + size.height
         private set
 
     var life = 3
@@ -18,14 +21,18 @@ class Frog(speed: Float, private val startX: Float, private val startY: Float) {
     var floatingVelocity = 0F
         private set
 
+    private val jumpDistance = distance
 
     fun positionReset(){
         x = startX
         y = startY
+        endX = x + size.width
+        endY = y + size.height
     }
 
-    fun frontJump(){
-        y -= frogSpeed
+    fun jump(){
+        y -= jumpDistance
+        endY -= jumpDistance
     }
 
     fun floatingSetting(velocity: Float){
@@ -39,9 +46,12 @@ class Frog(speed: Float, private val startX: Float, private val startY: Float) {
 
     fun frogFloating(){
         x += floatingVelocity
+        endX += floatingVelocity
     }
 
     fun frogDead(){
+        positionReset()
+        floatingReset()
         life -= 1
     }
 

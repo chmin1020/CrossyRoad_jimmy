@@ -26,8 +26,8 @@ interface GameContract {
         fun showFrogPosition(x: Float, y: Float)
 
         //주기적인 데이터 업데이트 과정에서 호출
-        fun showNewCrocodiles(crocodiles: List<Crocodile>, size: ObjectSize)
-        fun showNewLogs(logs: List<Log>, size: ObjectSize)
+        fun showNewCrocodiles(crocodiles: List<Crocodile>)
+        fun showNewLogs(logs: List<Log>)
         fun showCrocodileMoving(crocodiles: List<Crocodile>)
         fun showLogMoving(logs: List<Log>)
         fun hideRemovedCrocodiles(crocodiles: List<Crocodile>)
