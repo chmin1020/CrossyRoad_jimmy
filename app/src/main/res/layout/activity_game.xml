@@ -15,10 +15,10 @@
         android:elevation="10dp"
         android:gravity="center"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         style="@style/game_over_text"/>
 
 
@@ -29,11 +29,11 @@
         android:layout_margin="10dp"
         android:text="@string/score_cnt"
         android:elevation="2dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0"
         style="@style/game_control_text"/>
 
@@ -42,12 +42,12 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#B0B85D"
-        app:layout_constraintBottom_toTopOf="@id/river1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.1"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/river1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0"
+        app:layout_constraintHeight_percent="0.1"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <FrameLayout
@@ -55,35 +55,34 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#319EF4"
-        app:layout_constraintBottom_toTopOf="@id/river2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.1"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/destination"
+        app:layout_constraintBottom_toTopOf="@id/river2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.2"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintHeight_percent="0.1" />
 
     <FrameLayout
         android:id="@+id/river2"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#319EF4"
+        app:layout_constraintTop_toBottomOf="@+id/river1"
         app:layout_constraintBottom_toTopOf="@id/grass"
-        app:layout_constraintEnd_toEndOf="@id/river1"
-        app:layout_constraintHeight_percent="0.1"
         app:layout_constraintStart_toStartOf="@id/river1"
-        app:layout_constraintTop_toBottomOf="@+id/river1" />
+        app:layout_constraintEnd_toEndOf="@id/river1"
+        app:layout_constraintHeight_percent="0.1" />
 
     <FrameLayout
         android:id="@+id/grass"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#698A43"
+        app:layout_constraintTop_toBottomOf="@+id/river2"
         app:layout_constraintBottom_toTopOf="@id/river3"
+        app:layout_constraintStart_toStartOf="@id/river2"
         app:layout_constraintEnd_toEndOf="@id/river2"
-        app:layout_constraintHeight_percent="0.1"
-        app:layout_constraintStart_toStartOf="@+id/river2"
-        app:layout_constraintTop_toBottomOf="@+id/river2" />
+        app:layout_constraintHeight_percent="0.1" />
 
 
     <FrameLayout
@@ -91,23 +90,23 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#319EF4"
-        app:layout_constraintBottom_toTopOf="@id/river4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.1"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/grass"
-        app:layout_constraintVertical_bias="0.6" />
+        app:layout_constraintBottom_toTopOf="@id/river4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.6"
+        app:layout_constraintHeight_percent="0.1" />
 
     <FrameLayout
         android:id="@+id/river4"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#319EF4"
+        app:layout_constraintTop_toBottomOf="@+id/river3"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/river3"
-        app:layout_constraintHeight_percent="0.1"
         app:layout_constraintStart_toStartOf="@id/river3"
-        app:layout_constraintTop_toBottomOf="@+id/river3" />
+        app:layout_constraintEnd_toEndOf="@id/river3"
+        app:layout_constraintHeight_percent="0.1" />
 
     <TextView
         android:id="@+id/tv_life"
@@ -115,11 +114,11 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:text="@string/life_cnt"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1"
         style="@style/game_control_text"/>
 
@@ -131,11 +130,10 @@
         android:scaleType="fitXY"
         android:src="@drawable/frog"
         android:elevation="2dp"
-        app:layout_constraintDimensionRatio="1"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintDimensionRatio="1"
         app:layout_constraintWidth_percent="0.1" />
-
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/control_guideline"
@@ -146,7 +144,7 @@
 
 
     <ImageButton
-        android:id="@+id/btn_move"
+        android:id="@+id/btn_jump"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="10dp"
@@ -154,11 +152,12 @@
         android:background="#5FC65F"
         android:scaleType="fitXY"
         android:contentDescription="@string/jump_btn"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/control_guideline"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="1"
         app:layout_constraintWidth_percent="0.25"
-        app:layout_constraintDimensionRatio="1"/>
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

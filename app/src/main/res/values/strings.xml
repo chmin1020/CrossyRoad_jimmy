@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">CrossyRoad_jimmy</string>
-    <string name="life_cnt">Life : 3</string>
-    <string name="score_cnt">Score : 0</string>
+    <string name="life_cnt">Life : XXX</string>
+    <string name="score_cnt">Score : XXX</string>
     <string name="jump_btn">jump control</string>
     <string name="frog">frog</string>
     <string name="snake">snake</string>
