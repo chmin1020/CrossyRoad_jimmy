@@ -16,7 +16,16 @@ import com.example.crossyroad_jimmy.model.floatingObject.Log
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-class GameView(private val context: Context, private val presenter: GameContract.Presenter): GameContract.View {
+/**
+ *     View 인터페이스를 구현하는 MVP 속 View 역할을 하는 클래스
+ *     control 부분이 아닌, view 위치 갱신이나 추가 및 삭제같은 drawing 부분은 이 클래스가 담당한다.
+ *     UI 수정을 위해서는 activity context 가 필요하므로 이를 setting 때 넘겨 받는다.
+ */
+class GameView(private val context: Context, private val gamePresenter: GameContract.Presenter): GameContract.View {
+    //------------------------------------------------
+    // 변수 영역
+    //
+
     //ui 갱신을 위해 사용할 CoroutineScope
     private val uiThread = MainScope()
 
@@ -33,7 +42,7 @@ class GameView(private val context: Context, private val presenter: GameContract
     //
 
     /* 표시할 뷰와 이벤트를 세팅하고 vewBinding 객체를 반환하는 함수 */
-    fun initSet(): ViewBinding {
+    fun viewInitSetting(): ViewBinding {
         binder = ActivityGameBinding.inflate((context as Activity).layoutInflater)
         initListener()
         return binder
@@ -42,8 +51,8 @@ class GameView(private val context: Context, private val presenter: GameContract
     /* 뷰 이벤트 세팅 함수 */
     private fun initListener(){
         //점프 버튼
-        binder.btnMove.setOnClickListener {
-            presenter.frogJump()
+        binder.btnJump.setOnClickListener {
+            gamePresenter.frogJump()
         }
     }
 
@@ -51,14 +60,6 @@ class GameView(private val context: Context, private val presenter: GameContract
     //------------------------------------------------
     //함수 영역 (GameContract.View 오버라이딩)
     //
-
-    /* 개구리를 위치에 맞게 그리는 함수 */
-    override fun showFrogPosition(x: Float, y: Float) {
-        uiThread.launch {
-            binder.frog.x = x
-            binder.frog.y = y
-        }
-    }
 
     /* 무작위 설정된 뱀들을 그리는 함수 */
     override fun showSnakes(snakes: List<Snake>) {
@@ -69,55 +70,51 @@ class GameView(private val context: Context, private val presenter: GameContract
         }
     }
 
-    /* 새로운 악어들을 그리는 함수 */
-    override fun showNewCrocodiles(crocodiles: List<FloatingObject>) {
+    /* 개구리를 위치에 맞게 그리는 함수 */
+    override fun showFrogPosition(x: Float, y: Float) {
         uiThread.launch {
-            val crocodileIterator = crocodiles.iterator()
-            var eachCrocodile: FloatingObject
+            binder.frog.x = x
+            binder.frog.y = y
+        }
+    }
 
-            while (crocodileIterator.hasNext()) {
-                eachCrocodile = crocodileIterator.next()
-                crocodileTable[eachCrocodile.id] = makeNewCrocodileView(eachCrocodile)
-            }
+    /* 새로운 악어들을 그리는 함수 */
+    override fun showNewCrocodiles(crocodiles: Map<Long, Crocodile>) {
+        uiThread.launch {
+            crocodiles.forEach{ crocodileTable[it.key] = makeNewCrocodileView(it.value) }
         }
     }
 
     /* 새로운 통나무들을 그리는 함수 */
-    override fun showNewLogs(logs: List<FloatingObject>) {
+    override fun showNewLogs(logs: Map<Long, Log>) {
         uiThread.launch {
-            val logIterator = logs.iterator()
-            var eachLog: FloatingObject
-
-            while (logIterator.hasNext()) {
-                eachLog = logIterator.next()
-                logTable[eachLog.id] = makeNewLogView(eachLog)
-            }
+            logs.forEach { logTable[it.key] = makeNewLogView(it.value) }
         }
     }
 
     /* 악어를 위치에 맞게 이동시켜서 그리는 함수 */
-    override fun showCrocodileMoving(crocodiles: List<FloatingObject>) {
+    override fun showCrocodileMoving(crocodiles: Map<Long, Crocodile>) {
         uiThread.launch {
             eachViewMovingUpdate(crocodiles, crocodileTable)
         }
     }
 
     /* 통나무를 위치에 맞게 이동시켜서 그리는 함수 */
-    override fun showLogMoving(logs: List<FloatingObject>) {
+    override fun showLogMoving(logs: Map<Long, Log>) {
         uiThread.launch {
             eachViewMovingUpdate(logs, logTable)
         }
     }
 
     /* 화면을 벗어난 악어들을 지우는 함수 */
-    override fun hideRemovedCrocodiles(crocodiles: List<FloatingObject>) {
+    override fun hideRemovedCrocodiles(crocodiles: List<Long>) {
         uiThread.launch {
             eachViewRemovingUpdate(crocodiles, crocodileTable)
         }
     }
 
     /* 화면을 벗어난 통나무들을 지우는 함수 */
-    override fun hideRemovedLogs(logs: List<FloatingObject>) {
+    override  fun hideRemovedLogs(logs: List<Long>) {
         uiThread.launch {
             eachViewRemovingUpdate(logs, logTable)
         }
@@ -154,32 +151,25 @@ class GameView(private val context: Context, private val presenter: GameContract
     //
 
     /* FloatingObject 뷰를 화면에서 움직이는 함수 */
-    private fun eachViewMovingUpdate(movingObjects: List<FloatingObject>, viewTable: MutableMap<Long, ImageView>){
-        val iterator = movingObjects.iterator()
-        var curObj: FloatingObject
+    private fun eachViewMovingUpdate(floatingObjects: Map<Long, FloatingObject>, viewTable: MutableMap<Long, ImageView>){
         var curPos: Position
         var curView: ImageView?
 
-        //데이터 개수만큼 업데이트 (객체와 대응하는 뷰 각각 가져와서 속성 갱신)
-        while (iterator.hasNext()) {
-            curObj = iterator.next()
-            curPos = curObj.getPos()
-            curView = viewTable[curObj.id]
+        //데이터 개수만큼 업데이트 (객체와 대응하는 뷰를 id를 이용해 가져와서 속성 갱신)
+        floatingObjects.forEach{
+            curView = viewTable[it.key]
+            curPos = it.value.getPos()
             curView?.x = curPos.x
             curView?.y = curPos.y
         }
     }
 
     /* FloatingObject 뷰를 화면에서 지우는 함수 */
-    private fun eachViewRemovingUpdate(removedObjects: List<FloatingObject>, viewTable: MutableMap<Long, ImageView>){
-        val objectInList = removedObjects.iterator()
-        var curId: Long
-
-        //id에 해당하는 뷰를 테이블에서 삭제
-        while (objectInList.hasNext()) {
-            curId = objectInList.next().id
-            binder.root.removeView(viewTable[curId])
-            viewTable.remove(curId)
+    private fun eachViewRemovingUpdate(removedObjects: List<Long>, viewTable: MutableMap<Long, ImageView>){
+        //id에 해당하는 뷰를 화면과 테이블에서 삭제
+        removedObjects.forEach { id ->
+            binder.root.removeView(viewTable[id])
+            viewTable.remove(id)
         }
     }
 
@@ -192,10 +182,12 @@ class GameView(private val context: Context, private val presenter: GameContract
     /* 새로운 악어 뷰를 만드는 함수 */
     private fun makeNewCrocodileView(crocodile: FloatingObject): ImageView {
         val newCrocodileView = ImageView(context)
+
+        //악어의 이동 방향에 따른 이미지 선택
         val whichCrocodile = if(crocodile.velocity > 0)
-                                R.drawable.crocodile_to_right
-                             else
-                                R.drawable.crocodile_to_left
+            R.drawable.crocodile_to_right
+        else
+            R.drawable.crocodile_to_left
 
         viewCommonSetting(newCrocodileView, whichCrocodile, crocodile.size, crocodile.getPos())
         return newCrocodileView
